@@ -196,6 +196,5 @@ namespace Tests.Linq
 				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));
 			}
 		}
-
 	}
 }

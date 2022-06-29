@@ -472,37 +472,59 @@ namespace LinqToDB.Linq
 
 		public static long CacheMissCount => _queryCache.CacheMissCount;
 
+		bool        _savedDependsOnParameters;
+		Expression? _savedExpression;
+
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
-
-			expr = optimizationContext.ExpandExpression(expr);
-			// we need this call for correct processing parameters in ExpressionMethod
-			expr = optimizationContext.ExposeExpression(expr);
-
-			dependsOnParameters = optimizationContext.IsDependsOnParameters();
-
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
-
-			if (Configuration.Linq.DisableQueryCache)
-				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
-
+			// The query.Find method must be called first.
+			// If you have any query depended code, this method should take care of it.
+			//
 			var flags = dataContext.GetQueryFlags();
-			var query = _queryCache.Find(dataContext, expr, flags);
 
-			if (query == null)
+			if (Configuration.Linq.DisableQueryCache == false)
 			{
-				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+				var query = _queryCache.Find(dataContext, expr, flags);
 
-				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, flags);
+				if (query != null)
+				{
+					expr                = query._savedExpression!;
+					dependsOnParameters = query._savedDependsOnParameters;
+
+					return query;
+				}
 			}
 
-			return query;
+			{
+				var originalExpression  = expr;
+				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+
+				expr = optimizationContext.ExpandExpression(expr);
+				expr = optimizationContext.ExposeExpression(expr);
+
+				dependsOnParameters = optimizationContext.IsDependsOnParameters();
+
+				if (dataContext is IExpressionPreprocessor preprocessor)
+					expr = preprocessor.ProcessExpression(expr);
+
+				var query = CreateQuery(optimizationContext, new (expr, optimizationContext, dataContext), dataContext, originalExpression, expr);
+
+				query._savedExpression          = expr;
+				query._savedDependsOnParameters = dependsOnParameters;
+
+				if (!Configuration.Linq.DisableQueryCache && !query.DoNotCache)
+					_queryCache.TryAdd(dataContext, query, flags);
+
+				return query;
+			}
 		}
 
-		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
+		internal static Query<T> CreateQuery(
+			ExpressionTreeOptimizationContext optimizationContext,
+			ParametersContext                 parametersContext,
+			IDataContext                      dataContext,
+			Expression                        originalExpr,
+			Expression                        expr)
 		{
 			if (Configuration.Linq.GenerateExpressionTest)
 			{
@@ -515,7 +537,7 @@ namespace LinqToDB.Linq
 						TraceLevel.Info);
 			}
 
-			var query = new Query<T>(dataContext, expr);
+			var query = new Query<T>(dataContext, originalExpr);
 
 			try
 			{

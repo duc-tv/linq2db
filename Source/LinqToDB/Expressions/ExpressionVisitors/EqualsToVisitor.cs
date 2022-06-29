@@ -431,6 +431,7 @@ namespace LinqToDB.Expressions
 				return false;
 
 			var mi = expr1.Method.GetGenericMethodDefinitionCached();
+
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
 				mi, static mi =>
 				{
@@ -444,11 +445,10 @@ namespace LinqToDB.Expressions
 					for (var i = 0; i < parameters.Length; i++)
 					{
 						var attr = parameters[i].GetCustomAttribute<SqlQueryDependentAttribute>(false);
+
 						if (attr != null)
 						{
-							if (attributes == null)
-								attributes = new SqlQueryDependentAttribute[parameters.Length];
-							attributes[i] = attr;
+							(attributes ??= new SqlQueryDependentAttribute[parameters.Length])[i] = attr;
 						}
 					}
 
