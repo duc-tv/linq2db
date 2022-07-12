@@ -18,8 +18,8 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Logging;
-	using Interceptors;
 	using LinqToDB.Expressions;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -477,7 +477,7 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-			// The query.Find method must be called first.
+			// The query.Find(...) method must be called first.
 			// If you have any query depended code, this method should take care of it.
 			//
 			var flags = dataContext.GetQueryFlags();

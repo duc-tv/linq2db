@@ -17,20 +17,20 @@ namespace LinqToDB.Expressions
 	{
 		#region Cache
 		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
-		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipContantArgumentsMethods = new ();
+		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipConstantArgumentsMethods = new ();
 
 		static EqualsToVisitor()
 		{
 			// prefill with supported external methods as we cannot add attributes to them
 			var arr = new [] { false, true };
-			_skipContantArgumentsMethods[Methods.Queryable.Take               ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.Skip               ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.ElementAt          ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.ElementAtOrDefault ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.Take              ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.Skip              ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.ElementAt         ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.ElementAtOrDefault] = arr;
+			_skipConstantArgumentsMethods[Methods.Queryable.Take               ] = arr;
+			_skipConstantArgumentsMethods[Methods.Queryable.Skip               ] = arr;
+			_skipConstantArgumentsMethods[Methods.Queryable.ElementAt          ] = arr;
+			_skipConstantArgumentsMethods[Methods.Queryable.ElementAtOrDefault ] = arr;
+			_skipConstantArgumentsMethods[Methods.Enumerable.Take              ] = arr;
+			_skipConstantArgumentsMethods[Methods.Enumerable.Skip              ] = arr;
+			_skipConstantArgumentsMethods[Methods.Enumerable.ElementAt         ] = arr;
+			_skipConstantArgumentsMethods[Methods.Enumerable.ElementAtOrDefault] = arr;
 		}
 
 		public static void ClearCaches()
@@ -455,7 +455,7 @@ namespace LinqToDB.Expressions
 					return attributes;
 				});
 
-			var skipConstantArguments = _skipContantArgumentsMethods.GetOrAdd(
+			var skipConstantArguments = _skipConstantArgumentsMethods.GetOrAdd(
 				mi, static mi =>
 				{
 					var parameters = mi.GetParameters();
@@ -508,6 +508,7 @@ namespace LinqToDB.Expressions
 
 								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
 									arg1 = nevValue;
+
 								if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
 									return false;
 							}
