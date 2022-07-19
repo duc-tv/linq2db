@@ -18,10 +18,10 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
 			public string? String;
 
 			[Column("ncharDataType")]
@@ -41,10 +41,10 @@ namespace Tests.Linq
 			public int Id;
 
 			[Column("char20DataType")]
-			[Column(Configuration = ProviderName.SqlCe,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
+			[Column(Configuration = ProviderName.SqlCe,      IsColumn = false)]
+			[Column(Configuration = ProviderName.DB2,        IsColumn = false)]
+			[Column(Configuration = ProviderName.PostgreSQL, IsColumn = false)]
+			[Column(Configuration = ProviderName.MySql,      IsColumn = false)]
 			public char? Char;
 
 			[Column("ncharDataType"  , DataType = DataType.NChar)]

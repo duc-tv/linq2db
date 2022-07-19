@@ -490,7 +490,7 @@ namespace LinqToDB.Linq
 
 				if (query != null)
 				{
-					expr                = query._savedExpression!;
+					//expr                = query._savedExpression!;
 					dependsOnParameters = query._savedDependsOnParameters;
 
 					return query;
