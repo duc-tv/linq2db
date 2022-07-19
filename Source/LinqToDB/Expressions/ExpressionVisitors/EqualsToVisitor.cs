@@ -16,7 +16,8 @@ namespace LinqToDB.Expressions
 	static class EqualsToVisitor
 	{
 		#region Cache
-		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
+
+		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods        = new ();
 		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipConstantArgumentsMethods = new ();
 
 		static EqualsToVisitor()
@@ -37,6 +38,7 @@ namespace LinqToDB.Expressions
 		{
 			_queryDependentMethods.Clear();
 		}
+
 		#endregion
 
 		internal static bool EqualsTo(

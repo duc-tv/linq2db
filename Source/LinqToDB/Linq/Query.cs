@@ -368,6 +368,8 @@ namespace LinqToDB.Linq
 						// already added by another thread
 						return;
 
+				query.CollectQueryDepended();
+
 				lock (_syncCache)
 				{
 					var priorities   = _indexes;
@@ -557,6 +559,32 @@ namespace LinqToDB.Linq
 			}
 
 			return query;
+		}
+
+		#endregion
+
+		#region SqlQueryDepended support
+
+		void CollectQueryDepended()
+		{
+			Expression!.Visit(this, static (query, e) =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var call       = (MethodCallExpression)e;
+					var parameters = call.Method.GetParameters();
+
+					for (var i = 0; i < parameters.Length; i++)
+					{
+						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false)
+							.Cast<SqlQueryDependentAttribute>()
+							.FirstOrDefault();
+
+						if (attr != null)
+							query.AddQueryDependedObject(call.Arguments[i], attr);
+					}
+				}
+			});
 		}
 
 		#endregion

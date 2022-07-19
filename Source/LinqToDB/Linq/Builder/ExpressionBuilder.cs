@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -17,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -126,9 +125,6 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression[]?            compiledParameters)
 		{
 			_query               = query;
-
-			CollectQueryDepended(expression);
-
 			CompiledParameters   = compiledParameters;
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
@@ -136,6 +132,7 @@ namespace LinqToDB.Linq.Builder
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
+
 			_optimizationContext.ClearVisitedCache();
 
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
@@ -1474,33 +1471,13 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region SqQueryDepended support
-
-		void CollectQueryDepended(Expression expr)
-		{
-			expr.Visit(_query, static (query, e) =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var call = (MethodCallExpression)e;
-					var parameters = call.Method.GetParameters();
-					for (int i = 0; i < parameters.Length; i++)
-					{
-						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
-							.FirstOrDefault();
-						if (attr != null)
-							query.AddQueryDependedObject(call.Arguments[i], attr);
-					}
-				}
-			});
-		}
+		#region SqlQueryDepended support
 
 		public Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
 			Func<TContext, MemberInfo, IDataContext, Expression> qe)
 		{
 			return _query.AddQueryableMemberAccessors(context, memberInfo.MemberInfo, dataContext, qe);
 		}
-
 
 		#endregion
 
