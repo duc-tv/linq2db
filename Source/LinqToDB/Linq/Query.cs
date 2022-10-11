@@ -20,7 +20,6 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using LinqToDB.Expressions;
 	using Interceptors;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
