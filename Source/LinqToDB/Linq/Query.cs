@@ -486,11 +486,16 @@ namespace LinqToDB.Linq
 
 			if (Configuration.Linq.DisableQueryCache == false)
 			{
-				var query = _queryCache.Find(dataContext, expr, flags);
+//				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+				var ex                  = expr;
+				//var ex = optimizationContext.ExpandExpression(expr);
+				//var ex = optimizationContext.ExposeExpression(expr);
+
+				var query = _queryCache.Find(dataContext, ex, flags);
 
 				if (query != null)
 				{
-					//expr                = query._savedExpression!;
+					expr                = query._savedExpression!;
 					dependsOnParameters = query._savedDependsOnParameters;
 
 					return query;

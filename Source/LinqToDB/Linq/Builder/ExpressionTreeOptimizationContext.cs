@@ -728,7 +728,8 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr, false);
 		}
 
-		Dictionary<Expression, Expression>? _exposedCache;
+		Dictionary<Expression,Expression>? _exposedCache;
+
 		public Expression ExposeExpression(Expression expression)
 		{
 			if (_exposedCache != null && _exposedCache.TryGetValue(expression, out var result))
