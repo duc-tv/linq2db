@@ -12,18 +12,18 @@ using NUnit.Framework;
 
 namespace Tests.UserTests.Test3840
 {
-	public class Test
-	{
-		public virtual DateTime? StartDateTime { get; set; }
-
-		public virtual TimeSpan? PreNotification { get; set; }
-	}
-
 	[TestFixture]
 	public class Test3840Tests : TestBase
 	{
+		public class Test
+		{
+			public virtual DateTime? StartDateTime { get; set; }
+
+			public virtual TimeSpan? PreNotification { get; set; }
+		}
+
 		[Test]
-		public void Test3840([IncludeDataSources(TestProvName.AllSqlServer)] string configuration)
+		public void Test3840([IncludeDataSources(true, TestProvName.AllSqlServer)] string configuration)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -44,8 +44,7 @@ namespace Tests.UserTests.Test3840
 								  NotificationDateTime = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification!.Value.Milliseconds, t.StartDateTime)
 							  };
 					var lst = qry.ToList();
-					var sql = ((DataConnection)db).LastQuery;
-				}				
+				}
 			}
 		}
 	}
