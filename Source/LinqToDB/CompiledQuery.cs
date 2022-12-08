@@ -30,8 +30,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;
@@ -49,7 +48,7 @@ namespace LinqToDB
 			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
-		class TableHelper<T> : ITableHelper
+		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)

@@ -480,7 +480,7 @@ WHERE
 		}
 
 		[Test]
-		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
@@ -623,7 +623,7 @@ WHERE
 			}
 		}
 
-		class EntityWithUser
+		sealed class EntityWithUser
 		{
 			[Column]
 			public int UserId { get; set; }
@@ -646,7 +646,7 @@ WHERE
 		}
 	
 		[Test]
-		public void TestPropertiesFromDataConnection([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int currentUser)
+		public void TestPropertiesFromDataConnection([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int currentUser)
 		{
 			using (var db = new CustomDataConnection(context))
 			using (db.CreateLocalTable(new[]
@@ -669,7 +669,7 @@ WHERE
 		}
 	
 		[Test]
-		public void TestPropertiesFromDataContext([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void TestPropertiesFromDataContext([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new CustomDataContext(context))
 			using (db.CreateLocalTable(new[]
@@ -691,7 +691,7 @@ WHERE
 			}
 		}
 
-		class CustomDataConnection : DataConnection
+		sealed class CustomDataConnection : DataConnection
 		{
 			public CustomDataConnection(string? configurationString) : base(configurationString)
 			{
@@ -700,7 +700,7 @@ WHERE
 			public int CurrentUserId { get; set; }
 		}
 
-		class CustomDataContext : DataContext
+		sealed class CustomDataContext : DataContext
 		{
 		
 			public CustomDataContext(string? configurationString) : base(configurationString)

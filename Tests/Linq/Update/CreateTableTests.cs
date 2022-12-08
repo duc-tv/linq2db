@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTableTests : TestBase
 	{
-		class TestTable
+		sealed class TestTable
 		{
 			public int       ID;
 			public string?   Field1;
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,9 +110,11 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
@@ -176,19 +178,21 @@ namespace Tests.xUpdate
 			Value2,
 		}
 
-		class TestEnumTable
+		sealed class TestEnumTable
 		{
 			public FieldType1 Field1;
 			[Column(DataType=DataType.Int32)]
 			public FieldType1? Field11;
 			public FieldType2? Field2;
+			[Column(DataType=DataType.VarChar, Configuration = ProviderName.ClickHouse)]
 			[Column(DataType=DataType.Char, Length=2)]
 			public FieldType2 Field21;
 			public FieldType3 Field3;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
-		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
+		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -304,7 +308,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class TestCreateFormat
+		sealed class TestCreateFormat
 		{
 			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;

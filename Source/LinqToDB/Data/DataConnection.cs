@@ -431,8 +431,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (_isMarsEnabled == null)
-					_isMarsEnabled = (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
+				_isMarsEnabled ??= (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
 
 				return _isMarsEnabled.Value;
 			}
@@ -696,6 +695,7 @@ namespace LinqToDB.Data
 			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector);
 
 			var section = DefaultSettings;
 
@@ -858,7 +858,7 @@ namespace LinqToDB.Data
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
 			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
 
-		class ConfigurationInfo
+		sealed class ConfigurationInfo
 		{
 			private readonly bool    _dataProviderSet;
 			private readonly string? _configurationString;
@@ -1604,6 +1604,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			TransactionAsync?.Dispose();
@@ -1638,6 +1641,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			TransactionAsync?.Dispose();
@@ -1719,6 +1725,31 @@ namespace LinqToDB.Data
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
+
+						return true;
+					});
+			}
+		}
+
+		/// <summary>
+		/// Disposes transaction (if any), associated with connection.
+		/// </summary>
+		public virtual void DisposeTransaction()
+		{
+			if (TransactionAsync != null)
+			{
+				TraceAction(
+					this,
+					TraceOperation.DisposeTransaction,
+					static _ => "DisposeTransaction",
+					default(object?),
+					static (dataConnection, _) =>
+					{
+						dataConnection.TransactionAsync!.Dispose();
+						dataConnection.TransactionAsync = null;
+
+						if (dataConnection._command != null)
+							dataConnection._command.Transaction = null;
 
 						return true;
 					});

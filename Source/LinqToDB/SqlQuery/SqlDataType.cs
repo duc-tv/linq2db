@@ -119,7 +119,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
-		struct TypeInfo
+		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
 			{
@@ -202,6 +202,7 @@ namespace LinqToDB.SqlQuery
 		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
 		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
 
+		[Obsolete($"Use {nameof(MappingSchema)}.{nameof(MappingSchema.GetDataType)}() method instead")]
 		public static SqlDataType GetDataType(Type type)
 		{
 			var underlyingType = type;

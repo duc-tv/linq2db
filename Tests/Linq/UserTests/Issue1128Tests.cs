@@ -13,7 +13,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class FluentDerived : FluentBase
+		sealed class FluentDerived : FluentBase
 		{
 			public string? StringValue { get; set; }
 		}
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class AttributeDerived : AttributeBase
+		sealed class AttributeDerived : AttributeBase
 		{
 			public string? StringValue { get; set; }
 		}
@@ -67,7 +67,8 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<FluentBase>())
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
-				Assert.AreEqual(1, res);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.AreEqual(1, res);
 			}
 		}
 
@@ -80,7 +81,8 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<AttributeBase>())
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
-				Assert.AreEqual(1, res);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.AreEqual(1, res);
 			}
 		}
 	}

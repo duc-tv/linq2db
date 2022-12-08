@@ -27,7 +27,7 @@ namespace Tests.Data
 		#region ICommandInterceptor.CommandInitialized
 		// DataConnection: test that interceptors triggered and one-time interceptors removed safely after single command
 		[Test]
-		public void CommandInitializedOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CommandInitializedOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -75,7 +75,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CommandInitializedOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CommandInitializedOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -172,7 +172,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CommandInitializedOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void CommandInitializedOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -272,7 +272,7 @@ namespace Tests.Data
 
 		// test interceptors registration using fluent options builder
 		[Test]
-		public void CommandInitializedOnDataConnectionTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CommandInitializedOnDataConnectionTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var triggered1 = false;
 			var triggered2 = false;
@@ -324,7 +324,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CommandInitializedOnDataContextTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void CommandInitializedOnDataContextTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			var triggered1 = false;
 			var triggered2 = false;
@@ -377,7 +377,7 @@ namespace Tests.Data
 			}
 		}
 
-		public void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -431,7 +431,7 @@ namespace Tests.Data
 
 		#region ICommandInterceptor.Execute*
 		[Test]
-		public void DataConnection_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataConnection_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -460,7 +460,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			await using (var db = GetDataConnection(context))
 			{
@@ -549,7 +549,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void DataConnection_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataConnection_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -577,7 +577,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnection_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataConnection_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			await using (var db = GetDataConnection(context))
 			{
@@ -605,7 +605,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void DataContext_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataContext_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -634,7 +634,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataContext_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataContext_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			await using (var db = new DataContext(context))
 			{
@@ -725,7 +725,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void DataContext_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataContext_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -753,7 +753,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataContext_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataContext_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			await using (var db = new DataContext(context))
 			{
@@ -782,13 +782,69 @@ namespace Tests.Data
 
 		#endregion
 
+		#region ICommandInterceptor.CommandInitialized
+
+		[Test]
+		public async ValueTask BeforeReaderDisposeTestOnDataConnection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using var db = GetDataContext(context);
+
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			db.Person.ToList();
+
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+
+			interceptor.BeforeReaderDisposeTriggered = false;
+
+			await db.Person.ToListAsync();
+
+#if NETFRAMEWORK
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+#else
+			Assert.False(interceptor.BeforeReaderDisposeTriggered);
+			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+#endif
+		}
+
+		[Test]
+		public async ValueTask BeforeReaderDisposeTestOnDataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using var db = new DataContext(context);
+
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+
+			db.GetTable<Person>().ToList();
+
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+
+			interceptor.BeforeReaderDisposeTriggered = false;
+
+			await db.GetTable<Person>().ToListAsync();
+
+#if NETFRAMEWORK
+			Assert.True(interceptor.BeforeReaderDisposeTriggered);
+			Assert.False(interceptor.BeforeReaderDisposeAsyncTriggered);
+#else
+			Assert.False(interceptor.BeforeReaderDisposeTriggered);
+			Assert.True(interceptor.BeforeReaderDisposeAsyncTriggered);
+#endif
+		}
+
+		#endregion
+
 		#endregion
 
 		#region IConnectionInterceptor
 
 		#region Open Connection
 		[Test]
-		public void ConnectionOpenOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConnectionOpenOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -829,7 +885,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task ConnectionOpenAsyncOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task ConnectionOpenAsyncOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -870,7 +926,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ConnectionOpenOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ConnectionOpenOnDataConnectionCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -923,7 +979,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ConnectionOpenOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void ConnectionOpenOnDataContextCloningTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -978,7 +1034,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -1028,7 +1084,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task ConnectionOpenAsyncOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public async Task ConnectionOpenAsyncOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -1077,15 +1133,15 @@ namespace Tests.Data
 			}
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		#region IDataContextInterceptor
+#region IDataContextInterceptor
 
-		#region EntityCreated
+#region EntityCreated
 		[Test]
-		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1114,7 +1170,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void EntityCreated_DataContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EntityCreated_DataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -1143,11 +1199,11 @@ namespace Tests.Data
 			}
 		}
 
-		#endregion
-		#region OnClosing/OnClosed
+#endregion
+#region OnClosing/OnClosed
 
 		[Test]
-		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor1 = new TestDataContextInterceptor();
 			var interceptor2 = new TestDataContextInterceptor();
@@ -1227,7 +1283,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CloseEvents_DataContext([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void CloseEvents_DataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor1 = new TestDataContextInterceptor();
 			var interceptor2 = new TestDataContextInterceptor();
@@ -1323,7 +1379,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task CloseEvents_DataConnection_Or_RemoteContext_Async([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task CloseEvents_DataConnection_Or_RemoteContext_Async([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor1 = new TestDataContextInterceptor();
 			var interceptor2 = new TestDataContextInterceptor();
@@ -1403,7 +1459,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task CloseEvents_DataContext_Async([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task CloseEvents_DataContext_Async([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor1 = new TestDataContextInterceptor();
 			var interceptor2 = new TestDataContextInterceptor();
@@ -1500,7 +1556,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task CloseEvents_DataConnection_Or_RemoteContext_ExplicitCall([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public async Task CloseEvents_DataConnection_Or_RemoteContext_ExplicitCall([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor = new TestDataContextInterceptor();
 
@@ -1569,7 +1625,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task CloseEvents_DataContext_ExplicitCall([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task CloseEvents_DataContext_ExplicitCall([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var interceptor = new TestDataContextInterceptor();
 
@@ -1651,11 +1707,11 @@ namespace Tests.Data
 			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 
-		private class TestCommandInterceptor : CommandInterceptor
+		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
 			public bool CommandInitializedTriggered { get; set; }
 
@@ -1673,6 +1729,8 @@ namespace Tests.Data
 			public bool ExecuteScalarTriggered             { get; set; }
 			public bool ExecuteScalarAsyncTriggered        { get; set; }
 			public bool ExecuteAfterExecuteReaderTriggered { get; set; }
+			public bool BeforeReaderDisposeTriggered       { get; set; }
+			public bool BeforeReaderDisposeAsyncTriggered  { get; set; }
 
 			public override Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
 			{
@@ -1715,9 +1773,21 @@ namespace Tests.Data
 				ExecuteScalarAsyncTriggered = true;
 				return base.ExecuteScalarAsync(eventData, command, result, cancellationToken);
 			}
+
+			public override void BeforeReaderDispose(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+			{
+				BeforeReaderDisposeTriggered = true;
+				base.BeforeReaderDispose(eventData, command, dataReader);
+			}
+
+			public override Task BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader)
+			{
+				BeforeReaderDisposeAsyncTriggered = true;
+				return base.BeforeReaderDisposeAsync(eventData, command, dataReader);
+			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			public bool ConnectionOpenedTriggered       { get; set; }
 			public bool ConnectionOpenedAsyncTriggered  { get; set; }
@@ -1749,7 +1819,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public List<IDataContext> EntityCreatedContexts { get; } = new ();
 
@@ -1760,7 +1830,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public Dictionary<IDataContext, int> OnClosedContexts       { get; } = new();
 			public Dictionary<IDataContext, int> OnClosingContexts      { get; } = new();
@@ -1769,8 +1839,8 @@ namespace Tests.Data
 
 			public override void OnClosed(DataContextEventData eventData)
 			{
-				if (OnClosedContexts.ContainsKey(eventData.Context))
-					OnClosedContexts[eventData.Context]++;
+				if (OnClosedContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosedContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosedContexts[eventData.Context] = 1;
 
@@ -1779,8 +1849,8 @@ namespace Tests.Data
 
 			public override void OnClosing(DataContextEventData eventData)
 			{
-				if (OnClosingContexts.ContainsKey(eventData.Context))
-					OnClosingContexts[eventData.Context]++;
+				if (OnClosingContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosingContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosingContexts[eventData.Context] = 1;
 
@@ -1789,8 +1859,8 @@ namespace Tests.Data
 
 			public override Task OnClosedAsync(DataContextEventData eventData)
 			{
-				if (OnClosedAsyncContexts.ContainsKey(eventData.Context))
-					OnClosedAsyncContexts[eventData.Context]++;
+				if (OnClosedAsyncContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosedAsyncContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosedAsyncContexts[eventData.Context] = 1;
 
@@ -1799,8 +1869,8 @@ namespace Tests.Data
 
 			public override Task OnClosingAsync(DataContextEventData eventData)
 			{
-				if (OnClosingAsyncContexts.ContainsKey(eventData.Context))
-					OnClosingAsyncContexts[eventData.Context]++;
+				if (OnClosingAsyncContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosingAsyncContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosingAsyncContexts[eventData.Context] = 1;
 

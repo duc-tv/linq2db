@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -14,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>, ITable
+	sealed class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public SqlServerSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>, ITable
+	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>, ITable
 	{
 		public SqlServerSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

@@ -162,7 +162,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class AllTypes
+		sealed class AllTypes
 		{
 			public decimal DecimalDataType;
 			public byte[]? BinaryDataType;
@@ -173,7 +173,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -188,7 +188,7 @@ namespace Tests.Linq
 
 		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -270,7 +270,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryableCall([DataSources] string context)
+		public void TestQueryableCall([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -279,7 +279,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryableCallWithParameters([DataSources] string context)
+		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
 			Query.ClearCaches();
@@ -289,7 +289,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestQueryableCallWithParametersWorkaround([DataSources] string context)
+		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
 			Query.ClearCaches();
@@ -365,7 +365,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table404One
+		sealed class Table404One
 		{
 			[Column] public int Id { get; set; }
 
@@ -377,7 +377,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Table404Two
+		sealed class Table404Two
 		{
 			[Column] public int Id { get; set; }
 
@@ -396,7 +396,7 @@ namespace Tests.Linq
 			};
 		}
 
-		class FirstTable
+		sealed class FirstTable
 		{
 			public int Id;
 			public List<Table404Two>? Values;
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TestEqualsTable1
+		sealed class TestEqualsTable1
 		{
 			[Column]
 			public int Id { get; set; }
@@ -488,7 +488,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TestEqualsTable2
+		sealed class TestEqualsTable2
 		{
 			[Column]
 			public int Id { get; set; }
@@ -498,7 +498,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestParameterInEquals([DataSources] string context)
+		public void TestParameterInEquals([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table1 = db.CreateLocalTable<TestEqualsTable1>())
@@ -1227,7 +1227,7 @@ namespace Tests.Linq
 		private int _param;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		public void TestIQueryableParameterEvaluation([DataSources] string context)
+		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
 			LinqToDB.Linq.Query.ClearCaches();
@@ -1355,7 +1355,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		public void TestIQueryableParameterEvaluationCaching([DataSources] string context)
+		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

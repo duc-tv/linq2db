@@ -118,8 +118,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_systemAdapter == null)
 					lock (_sysSyncRoot)
-						if (_systemAdapter == null)
-							_systemAdapter = CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+						_systemAdapter ??= CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 
 				return _systemAdapter;
 			}
@@ -127,8 +126,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_microsoftAdapter == null)
 					lock (_msSyncRoot)
-						if (_microsoftAdapter == null)
-							_microsoftAdapter = CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+						_microsoftAdapter ??= CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 
 				return _microsoftAdapter;
 			}
@@ -232,7 +230,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region SqlException
 		[Wrapper]
-		internal class SqlException : TypeWrapper
+		internal sealed class SqlException : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -249,7 +247,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlErrorCollection : TypeWrapper
+		internal sealed class SqlErrorCollection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -280,7 +278,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlError : TypeWrapper
+		internal sealed class SqlError : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -298,7 +296,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		[Wrapper]
-		private class SqlParameter
+		private sealed class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
 			public string    UdtTypeName { get; set; } = null!;

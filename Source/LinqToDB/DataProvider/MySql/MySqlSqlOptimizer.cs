@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
-	class MySqlSqlOptimizer : BasicSqlOptimizer
+	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -131,8 +131,8 @@ namespace LinqToDB.DataProvider.MySql
 
 				if (caseSensitive == false)
 				{
-					searchExpr = new SqlFunction(typeof(string), "$ToLower$", searchExpr);
-					dataExpr   = new SqlFunction(typeof(string), "$ToLower$", dataExpr);
+					searchExpr = PseudoFunctions.MakeToLower(searchExpr);
+					dataExpr   = PseudoFunctions.MakeToLower(dataExpr);
 				}
 
 				ISqlPredicate? newPredicate = null;

@@ -20,9 +20,11 @@ namespace Tests.Linq
 	public class ExpressionsTests : TestBase
 	{
 		[Sql.Expression("{0} << {1}", Precedence = Precedence.Primary)]
+		[Sql.Expression(ProviderName.ClickHouse, "bitShiftLeft({0}, {1})", Precedence = Precedence.Primary)]
 		public static long Shl(long v, int s) => v << s;
 
 		[Sql.Expression("{0} >> {1}", Precedence = Precedence.Primary)]
+		[Sql.Expression(ProviderName.ClickHouse, "bitShiftRight({0}, {1})", Precedence = Precedence.Primary)]
 		public static long Shr(long v, int s) => v >> s;
 
 		static ExpressionsTests()
@@ -36,7 +38,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -65,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MappingTestClass
+		sealed class MappingTestClass
 		{
 			[Column] public int       Id    { get; set; }
 			[Column] public int       Value { get; set; }
@@ -73,7 +75,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
 		{
 			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
 				{
@@ -101,18 +103,18 @@ namespace Tests.Linq
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
-		public void MapMember1([DataSources] string context)
+		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
 			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(p => Count1(p)), db.Parent.Select(p => Count1(p)));
+				AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
-		public void MapMember2([DataSources] string context)
+		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
@@ -123,7 +125,7 @@ namespace Tests.Linq
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
-		public void MapMember3([DataSources(ProviderName.SqlCe)] string context)
+		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
@@ -147,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression4([DataSources] string context)
+		public void MethodExpression4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 3;
 
@@ -171,7 +173,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
+		public void MethodExpression5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2) ]int n)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -193,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression6([DataSources] string context)
+		public void MethodExpression6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -215,7 +217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
+		public void MethodExpression7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			var n = 2;
 
@@ -259,7 +261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 				AreEqual(
@@ -278,7 +280,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 				AreEqual(
@@ -347,7 +349,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestClass<T>
+		sealed class TestClass<T>
 		{
 			[ExpressionMethod(nameof(GetBoolExpression3))]
 			public static bool GetBool3(Parent? obj)
@@ -387,7 +389,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationMethodExpression([DataSources] string context)
+		public void AssociationMethodExpression([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -399,7 +401,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async Task AssociationMethodExpressionAsync([DataSources] string context)
+		public async Task AssociationMethodExpressionAsync([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -493,7 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinTest2([DataSources] string context)
+		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -508,6 +510,7 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
 
 			using (var db = GetDataContext(context))
@@ -515,6 +518,7 @@ namespace Tests.Linq
 				AreEqual(
 					   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -585,8 +589,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -596,8 +601,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -607,8 +613,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -618,8 +625,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -629,8 +637,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -640,8 +649,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -651,8 +661,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -662,8 +673,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -673,8 +685,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -684,8 +697,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -717,8 +731,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -728,8 +743,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -739,8 +755,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -750,8 +767,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -761,8 +779,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -772,8 +791,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -784,7 +804,7 @@ namespace Tests.Linq
 		}
 
 		[LinqToDB.Mapping.Table("AllTypes")]
-		class AllTypes
+		sealed class AllTypes
 		{
 			[LinqToDB.Mapping.Column] public int     ID              { get; set; }
 			[LinqToDB.Mapping.Column] public int?    intDataType     { get; set; }
@@ -817,7 +837,7 @@ namespace Tests.Linq
 
 		#region issue 2688
 		[Test]
-		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -826,7 +846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -835,7 +855,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -844,7 +864,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -853,7 +873,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -931,7 +951,7 @@ namespace Tests.Linq
 
 		#region issue 2431
 		[Table]
-		class Issue2431Table
+		sealed class Issue2431Table
 		{
 			[Column] public int Id;
 			[Column(DataType = DataType.NVarChar)] public JsonType? Json;
@@ -943,7 +963,7 @@ namespace Tests.Linq
 				new Issue2431Table() { Id = 3 }
 			};
 
-			public class JsonType
+			public sealed class JsonType
 			{
 				public string? Text;
 			}
@@ -980,7 +1000,7 @@ namespace Tests.Linq
 
 		#region issue 2434
 		[Table]
-		class Issue2434Table
+		sealed class Issue2434Table
 		{
 			[Column] public int     Id;
 			[Column] public string? FirstName;
@@ -1027,7 +1047,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3472Test([DataSources] string context)
+		public void Issue3472Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			if (db is DataConnection)
@@ -1045,8 +1065,9 @@ namespace Tests.Linq
 
 		#region Null check generated
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1054,8 +1075,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
-		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1107,7 +1129,7 @@ namespace Tests.Linq
 
 		#region Regression: query comparison
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest1([DataSources(ProviderName.SqlCe)] string context)
+		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1124,7 +1146,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest2([DataSources(TestProvName.AllAccess)] string context)
+		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1150,7 +1172,7 @@ namespace Tests.Linq
 
 	static class ExpressionTestExtensions
 	{
-		public class LeftJoinInfo<TOuter,TInner>
+		public sealed class LeftJoinInfo<TOuter,TInner>
 		{
 			public TOuter Outer = default!;
 			public TInner Inner = default!;

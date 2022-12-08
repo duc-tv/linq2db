@@ -12,7 +12,7 @@ namespace LinqToDB.SchemaProvider
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
-		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? prec, int? scale);
+		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? precision, int? scale);
 		protected abstract List<TableInfo>                     GetTables     (DataConnection dataConnection, GetSchemaOptions options);
 		protected abstract IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options);
 		protected abstract List<ColumnInfo>                    GetColumns    (DataConnection dataConnection, GetSchemaOptions options);
@@ -86,8 +86,7 @@ namespace LinqToDB.SchemaProvider
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			if (options == null)
-				options = new GetSchemaOptions();
+			options ??= new GetSchemaOptions();
 
 			IncludedSchemas       = GetHashSet(options.IncludedSchemas,  options.StringComparer);
 			ExcludedSchemas       = GetHashSet(options.ExcludedSchemas,  options.StringComparer);
@@ -193,6 +192,7 @@ namespace LinqToDB.SchemaProvider
 						Length               = column.c.Length,
 						Precision            = column.c.Precision,
 						Scale                = column.c.Scale,
+						Ordinal              = column.c.Ordinal,
 					});
 				}
 
@@ -612,7 +612,7 @@ namespace LinqToDB.SchemaProvider
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
@@ -764,7 +764,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');

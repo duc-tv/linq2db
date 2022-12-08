@@ -1,17 +1,18 @@
 ﻿namespace LinqToDB.DataProvider.Access
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	class AccessODBCSqlOptimizer : AccessSqlOptimizer
+	sealed class AccessODBCSqlOptimizer : AccessSqlOptimizer
 	{
 		public AccessODBCSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
-			statement = base.Finalize(statement);
+			statement = base.Finalize(mappingSchema, statement);
 
 			statement = WrapParameters(statement);
 

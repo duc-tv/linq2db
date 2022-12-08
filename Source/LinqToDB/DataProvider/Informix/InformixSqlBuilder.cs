@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using System.Data.Common;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		/// <summary>
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false);
+			BuildDataType(dataType, false, value.CanBeNull);
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

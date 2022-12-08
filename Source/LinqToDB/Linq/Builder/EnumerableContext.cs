@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class EnumerableContext : IBuildContext
+	sealed class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TableContext code almost not changed. TODO: Remove after implementing base ObjectContext
 
-		class ColumnInfo
+		sealed class ColumnInfo
 		{
 			public bool       IsComplex;
 			public string     Name       = null!;
@@ -519,8 +519,7 @@ namespace LinqToDB.Linq.Builder
 						field = new SqlField(_elementType, "item", true);
 						var param = Expression.Parameter(typeof(object), "record");
 						var body = Expression.New(Methods.LinqToDB.Sql.SqlValueConstructor,
-							Expression.Constant(new DbDataType(_elementType,
-								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
+							Expression.Constant(ColumnDescriptor.CalculateDbDataType(Builder.MappingSchema, _elementType)),
 							param);
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);

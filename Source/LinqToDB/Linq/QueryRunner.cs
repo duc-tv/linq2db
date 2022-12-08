@@ -44,7 +44,7 @@ namespace LinqToDB.Linq
 
 		#region Mapper
 
-		class Mapper<T>
+		sealed class Mapper<T>
 		{
 			public Mapper(Expression<Func<IQueryRunner, DbDataReader, T>> mapperExpression)
 			{
@@ -54,7 +54,7 @@ namespace LinqToDB.Linq
 			readonly Expression<Func<IQueryRunner,DbDataReader,T>> _expression;
 			readonly ConcurrentDictionary<Type,ReaderMapperInfo>   _mappers = new ();
 
-			public class ReaderMapperInfo
+			public sealed class ReaderMapperInfo
 			{
 				public Expression<Func<IQueryRunner,DbDataReader,T>> MapperExpression = null!;
 				public Func<IQueryRunner,DbDataReader,T>             Mapper = null!;
@@ -183,7 +183,7 @@ namespace LinqToDB.Linq
 				return e;
 			}
 
-			class TransformMapperExpressionContext
+			sealed class TransformMapperExpressionContext
 			{
 				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, DbDataReader, T>> expression, IDataContext context, DbDataReader dataReader, Type dataReaderType)
 				{
@@ -211,7 +211,7 @@ namespace LinqToDB.Linq
 		{
 			foreach (var sql in query.Queries)
 			{
-				sql.Statement = query.SqlOptimizer.Finalize(sql.Statement);
+				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement);
 
 				SqlStatement.PrepareQueryAndAliases(sql.Statement, null, out var aliasesContext);
 
@@ -465,7 +465,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
+		sealed class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
 		{
 			readonly Query             _query;
 			readonly IDataContext      _dataContext;
@@ -571,7 +571,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
+		sealed class AsyncEnumerableImpl<T> : IAsyncEnumerable<T>
 		{
 			readonly Query             _query;
 			readonly IDataContext      _dataContext;

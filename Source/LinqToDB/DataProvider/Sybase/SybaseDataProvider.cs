@@ -16,8 +16,8 @@ namespace LinqToDB.DataProvider.Sybase
 	using Extensions;
 	using System.Data.Common;
 
-	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
 
 	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
@@ -29,11 +29,9 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
-			//SqlProviderFlags.IsCountSubQuerySupported       = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 
@@ -220,8 +218,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override BulkCopyRowsCopied BulkCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -233,8 +230,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -248,8 +244,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new SybaseBulkCopy(this);
+			_bulkCopy ??= new SybaseBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : options.BulkCopyType,

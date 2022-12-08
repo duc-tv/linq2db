@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlQuery;
 	using Mapping;
 
-	class InformixSqlOptimizer : BasicSqlOptimizer
+	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(statement);
+			return base.Finalize(mappingSchema, statement);
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
@@ -135,7 +135,8 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					// passing parameter to NVL will result in "A syntax error has occurred." error from server
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];
@@ -189,6 +190,12 @@ namespace LinqToDB.DataProvider.Informix
 
 										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
 									}
+
+									if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
+											|| IsDateTimeType(func.Parameters[0], "DateTime")
+											|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
+										&& func.Parameters[1].SystemType == typeof(string))
+										return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
 
 									if (IsTimeDataType(func.Parameters[0]))
 										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);

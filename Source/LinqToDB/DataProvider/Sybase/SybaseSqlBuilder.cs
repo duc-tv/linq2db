@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using Mapping;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);

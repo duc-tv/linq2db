@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
@@ -158,9 +158,9 @@ namespace LinqToDB.DataProvider.MySql
 					_ => null
 				})
 				{
-					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable); break;
-					case var t       : StringBuilder.Append(t);                                             break;
+					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
+					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
+					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
 				return;
@@ -250,8 +250,8 @@ namespace LinqToDB.DataProvider.MySql
 				_ => null
 			})
 						{
-				case null  : base.BuildDataTypeFromDataType(type, forCreateTable); break;
-				case var t : StringBuilder.Append(t);                              break;
+				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case var t : StringBuilder.Append(t);                                         break;
 			};
 		}
 
@@ -595,7 +595,7 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected StringBuilder? HintBuilder;
+		private StringBuilder? HintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;

@@ -35,6 +35,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
@@ -74,6 +77,9 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
+			if (!DataProvider.TransactionsSupported)
+				return new(this);
+
 			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
@@ -227,6 +233,33 @@ namespace LinqToDB.Data
 			}
 		}
 
+		/// <summary>
+		/// Dispose started (if any) transaction, associated with connection.
+		/// If underlying provider doesn't support asynchonous disposal, it will be performed synchonously.
+		/// </summary>
+		/// <returns>Asynchronous operation completion task.</returns>
+		public virtual async Task DisposeTransactionAsync()
+		{
+			if (TransactionAsync != null)
+			{
+				await TraceActionAsync(
+					this,
+					TraceOperation.DisposeTransaction,
+					static _ => "DisposeTransactionAsync",
+					default(object?),
+					static async (dataConnection, _, cancellationToken) =>
+					{
+						await dataConnection.TransactionAsync!.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						dataConnection.TransactionAsync = null;
+
+						if (dataConnection._command != null)
+							dataConnection._command.Transaction = null;
+
+						return _;
+					}, default)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+		}
 
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection asynchronously.

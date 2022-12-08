@@ -13,7 +13,7 @@ namespace LinqToDB.Remote
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
 	/// query AST and result values.
 	/// </summary>
-	internal class SerializationConverter
+	internal sealed class SerializationConverter
 	{
 		static readonly Type _stringType = typeof(string);
 		static readonly MemoryCache<(Type from, int schemaId)> _serializeConverters   = new (new ());
@@ -49,8 +49,7 @@ namespace LinqToDB.Remote
 						from     = Enum.GetUnderlyingType(from);
 					}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
+					li ??= ms.GetConverter(new DbDataType(from), new DbDataType(_stringType), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;
@@ -100,8 +99,7 @@ namespace LinqToDB.Remote
 							to = Enum.GetUnderlyingType(to);
 						}
 
-					if (li == null)
-						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
+					li ??= ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;
 
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;

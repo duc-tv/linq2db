@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	class SetOperationBuilder : MethodCallBuilder
+	sealed class SetOperationBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
 
@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			public readonly List<SubQueryContext>  Sequences = new ();
 
 			[DebuggerDisplay("{Member.MemberExpression}, SequenceInfo: ({SequenceInfo}), SqlQueryInfo: ({SqlQueryInfo})")]
-			class Member
+			sealed class Member
 			{
 				public SqlInfo?          SequenceInfo;
 				public SqlInfo?          SqlQueryInfo;
@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[DebuggerDisplay("{Member.MemberExpression}, Infos.Count: {Infos.Count}, Infos[0]: ({Infos[0]}), Infos[1]: ({Infos[1]})")]
-			class UnionMember
+			sealed class UnionMember
 			{
 				public UnionMember(Member member, SqlInfo info)
 				{
@@ -559,8 +559,7 @@ namespace LinqToDB.Linq.Builder
 							foreach (var s in Sequences)
 							{
 								var res = s.BuildExpression(null, level, enforceServerSide);
-								if (ex == null)
-									ex = res;
+								ex ??= res;
 							}
 
 							return ex!;
@@ -679,16 +678,13 @@ namespace LinqToDB.Linq.Builder
 									if (member == null)
 										throw new LinqToDBException($"Expression '{expression}' is not a field.");
 
-									if (member.SqlQueryInfo == null)
-									{
-										member.SqlQueryInfo = new SqlInfo
+									member.SqlQueryInfo ??= new SqlInfo
 										(
 											member.MemberExpression.Member,
 											SubQuery.SelectQuery.Select.Columns[member.SequenceInfo!.Index],
 											SelectQuery,
 											member.SequenceInfo!.Index
 										);
-									}
 
 									return new[] { member.SqlQueryInfo };
 								}

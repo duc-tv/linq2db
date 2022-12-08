@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		class CheckSubQueryForWhereContext
+		sealed class CheckSubQueryForWhereContext
 		{
 			public CheckSubQueryForWhereContext(ExpressionBuilder builder, IBuildContext buildContext)
 			{
@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (ctx.IsExpression(null, 0, RequestFor.Field).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.Field);
-				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result)
+				if (ctx.IsExpression(null, 0, RequestFor.Expression).Result && !ctx.IsExpression(null, 0, RequestFor.Object).Result)
 					ctx.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
 
@@ -381,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 			Expression ConvertNull(MemberExpression expression);
 		}
 
-		class ConvertHelper<T> : IConvertHelper
+		sealed class ConvertHelper<T> : IConvertHelper
 			where T : struct
 		{
 			public Expression ConvertNull(MemberExpression expression)
@@ -513,11 +513,11 @@ namespace LinqToDB.Linq.Builder
 								switch (ma.Member.Name)
 								{
 									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds": datePart = Sql.DateParts.Second; break;
-									case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
-									case "TotalHours": datePart = Sql.DateParts.Hour; break;
-									case "TotalDays": datePart = Sql.DateParts.Day; break;
-									default: return new TransformInfo(e);
+									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
+									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
+									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
+									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
+									default                 : return new TransformInfo(e);
 								}
 
 								var ex = (BinaryExpression)ma.Expression;
@@ -607,8 +607,7 @@ namespace LinqToDB.Linq.Builder
 					lambda = Expressions.ConvertMember(MappingSchema, pi.Object.Type, concreteTypeMemberInfo);
 			}
 
-			if (lambda == null)
-				lambda = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+			lambda ??= Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 			return lambda == null ? null : OptimizationContext.ConvertMethod(pi, lambda);
 		}
@@ -924,34 +923,34 @@ namespace LinqToDB.Linq.Builder
 
 					switch (expression.NodeType)
 					{
-						case ExpressionType.Add:
-						case ExpressionType.AddChecked: return new SqlBinaryExpression(t, l, "+", r, Precedence.Additive);
-						case ExpressionType.And: return new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise);
-						case ExpressionType.Divide: return new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative);
-						case ExpressionType.ExclusiveOr: return new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise);
-						case ExpressionType.Modulo: return new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative);
-						case ExpressionType.Multiply:
+						case ExpressionType.Add            :
+						case ExpressionType.AddChecked     : return new SqlBinaryExpression(t, l, "+", r, Precedence.Additive);
+						case ExpressionType.And            : return new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise);
+						case ExpressionType.Divide         : return new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative);
+						case ExpressionType.ExclusiveOr    : return new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise);
+						case ExpressionType.Modulo         : return new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative);
+						case ExpressionType.Multiply       :
 						case ExpressionType.MultiplyChecked: return new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative);
-						case ExpressionType.Or: return new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise);
-						case ExpressionType.Power: return new SqlFunction(t, "Power", l, r);
-						case ExpressionType.Subtract:
+						case ExpressionType.Or             : return new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise);
+						case ExpressionType.Power          : return new SqlFunction(t, "Power", l, r);
+						case ExpressionType.Subtract       :
 						case ExpressionType.SubtractChecked: return new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction);
-						case ExpressionType.Coalesce:
+						case ExpressionType.Coalesce       :
 						{
 							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
 							{
-								if (c.Name == "Coalesce")
+								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
 									var parms = new ISqlExpression[c.Parameters.Length + 1];
 
 									parms[0] = l;
 									c.Parameters.CopyTo(parms, 1);
 
-									return new SqlFunction(t, "Coalesce", parms);
+									return PseudoFunctions.MakeCoalesce(t, parms);
 								}
 							}
 
-							return new SqlFunction(t, "Coalesce", l, r);
+							return PseudoFunctions.MakeCoalesce(t, l, r);
 						}
 					}
 
@@ -984,19 +983,22 @@ namespace LinqToDB.Linq.Builder
 
 					var o = ConvertToSql(context, e.Operand);
 
-					if (e.Method == null && e.IsLifted)
+					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 						return o;
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 						return o;
 
+					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
+						return o;
+
 					var t = e.Operand.Type;
-					var s = SqlDataType.GetDataType(t);
+					var s = MappingSchema.GetDataType(t);
 
 					if (o.SystemType != null && s.Type.SystemType == typeof(object))
 					{
 						t = o.SystemType;
-						s = SqlDataType.GetDataType(t);
+						s = MappingSchema.GetDataType(t);
 					}
 
 					if (e.Type == t ||
@@ -1004,10 +1006,7 @@ namespace LinqToDB.Linq.Builder
 						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						return o;
 
-					return new SqlFunction(e.Type, "$Convert$", SqlDataType.GetDataType(e.Type), s, o)
-					{
-						CanBeNull = o.CanBeNull
-					};
+					return PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o);
 				}
 
 				case ExpressionType.Conditional:
@@ -1060,24 +1059,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Parameter:
-				{
-					var ctx = GetContext(context, expression);
-
-					if (ctx != null)
-					{
-						var sql = ctx.ConvertToSql(expression, 0, ConvertFlags.Field);
-
-						switch (sql.Length)
-						{
-							case 0: break;
-							case 1: return sql[0].Sql;
-							default: throw new InvalidOperationException();
-						}
-					}
-
-					break;
-				}
-
 				case ExpressionType.Extension:
 				{
 					var ctx = GetContext(context, expression);
@@ -1664,8 +1645,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (predicate == null)
-				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 
@@ -2156,7 +2136,7 @@ namespace LinqToDB.Linq.Builder
 			return typeResult;
 		}
 
-		private class GetDataTypeContext
+		private sealed class GetDataTypeContext
 		{
 			public GetDataTypeContext(DbDataType baseType)
 			{
@@ -2214,6 +2194,16 @@ namespace LinqToDB.Linq.Builder
 						context.Scale        = ((SqlValue)e).ValueType.Scale;
 						return true;
 					default:
+						if (e is ISqlExpression expr)
+						{
+							var type = expr.GetExpressionType();
+							context.DataType  = type.DataType;
+							context.DbType    = type.DbType;
+							context.Length    = type.Length;
+							context.Precision = type.Precision;
+							context.Scale     = type.Scale;
+							return true;
+						}
 						return false;
 				}
 			});
@@ -2633,7 +2623,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeTranslatedToSql
 
-		private class CanBeTranslatedToSqlContext
+		private sealed class CanBeTranslatedToSqlContext
 		{
 			public CanBeTranslatedToSqlContext(ExpressionBuilder builder, IBuildContext buildContext, bool canBeCompiled)
 			{
@@ -2963,7 +2953,7 @@ namespace LinqToDB.Linq.Builder
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
-							assignments.Add((ma, dic.ContainsKey(ma.Member.Name) ? dic[ma.Member.Name] : 1000000));
+							assignments.Add((ma, dic.TryGetValue(ma.Member.Name, out var idx) ? idx : 1000000));
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{
@@ -3153,8 +3143,7 @@ namespace LinqToDB.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			if (_disabledFilters == null)
-				_disabledFilters = new Stack<Type[]>();
+			_disabledFilters ??= new Stack<Type[]>();
 			_disabledFilters.Push(disabledFilters);
 		}
 

@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Runtime.CompilerServices;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,9 +14,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlProvider;
 
-	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
-	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
-	class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
+	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
+	sealed class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 
 	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
@@ -31,7 +32,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Version = version;
 
 			SqlProviderFlags.IsApplyJoinSupported              = version != PostgreSQLVersion.v92;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = version == PostgreSQLVersion.v95;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
@@ -140,10 +141,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
 
 
-			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod     , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod    , dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlInetType    , Adapter.NpgsqlInetType    , GetProviderSpecificValueReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod         , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod! , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!     , dataReaderType: Adapter.DataReaderType);
+
+			if (Adapter.NpgsqlIntervalType != null)
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.NpgsqlIntervalType }] = Adapter.NpgsqlIntervalReader!;
+
+			SetProviderField(Adapter.NpgsqlInetType, Adapter.NpgsqlInetType, GetProviderSpecificValueReaderMethod, dataReaderType: Adapter.DataReaderType);
 
 			bool mapType(string dbType, NpgsqlProviderAdapter.NpgsqlDbType type)
 			{
@@ -182,6 +187,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v15 => ProviderName.PostgreSQL15,
 				PostgreSQLVersion.v92 => ProviderName.PostgreSQL92,
 				PostgreSQLVersion.v93 => ProviderName.PostgreSQL93,
 				_                     => ProviderName.PostgreSQL95,
@@ -375,7 +381,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (string.IsNullOrWhiteSpace(dbType))
 				return null;
 
-			dbType = dbType!.ToLower();
+			dbType = dbType!.ToLowerInvariant();
 
 			// detect arrays
 			var isArray = false;
@@ -514,10 +520,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (dbType.StartsWith("bit varying("))
 				dbType = "bit varying";
 
-			if (_npgsqlTypeMap.ContainsKey(dbType))
+			if (_npgsqlTypeMap.TryGetValue(dbType, out var result))
 			{
-				var result = _npgsqlTypeMap[dbType];
-
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
 				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, isMultiRange, convertAlways);
@@ -532,6 +536,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return version switch
 			{
+				PostgreSQLVersion.v15 => new PostgreSQLMappingSchema.PostgreSQL15MappingSchema(),
 				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(),
 				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(),
 				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(),

@@ -42,7 +42,7 @@ namespace LinqToDB.Expressions
 			return new TransformVisitor<TContext>(context, func);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? Transform(Expression? expr)
 		{
 			if (expr == null)
@@ -341,8 +341,7 @@ namespace LinqToDB.Expressions
 
 				if (e != item)
 				{
-					if (list == null)
-						list = new List<T>(source);
+					list ??= new List<T>(source);
 					list[i] = e;
 				}
 			}
@@ -362,8 +361,7 @@ namespace LinqToDB.Expressions
 
 				if (e != item)
 				{
-					if (list == null)
-						list    = new List<T>(source);
+					list    ??= new List<T>(source);
 					list[i] = e;
 				}
 			}

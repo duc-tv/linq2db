@@ -8,7 +8,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2546Tests : TestBase
 	{
-		class Issue2546Class
+		sealed class Issue2546Class
 		{
 			[Column] [PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value { get; set; }
@@ -16,7 +16,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

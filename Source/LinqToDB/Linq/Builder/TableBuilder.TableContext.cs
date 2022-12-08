@@ -198,8 +198,7 @@ namespace LinqToDB.Linq.Builder
 							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
-							if (_loadWithCache == null)
-								_loadWithCache = new Dictionary<MemberInfo, Expression>();
+							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
 							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
 							_ = Builder.AssociationPath.Pop();
@@ -376,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			class ColumnInfo
+			sealed class ColumnInfo
 			{
 				public bool       IsComplex;
 				public string     Name = null!;
@@ -602,9 +601,9 @@ namespace LinqToDB.Linq.Builder
 				var q = new List<(int idx, int sort)>();
 				for (var i = 0; i < SqlTable.Fields.Count; i++)
 				{
-					if (names.ContainsKey(SqlTable.Fields[i].Name))
+					if (names.TryGetValue(SqlTable.Fields[i].Name, out var nameIndex))
 					{
-						q.Add((i, names[SqlTable.Fields[i].Name]));
+						q.Add((i, nameIndex));
 					}
 				}
 
@@ -1303,8 +1302,7 @@ namespace LinqToDB.Linq.Builder
 					return;
 
 				if (!alias.Contains('<'))
-					if (SqlTable.Alias == null)
-						SqlTable.Alias = alias;
+					SqlTable.Alias ??= alias;
 			}
 
 			#endregion
@@ -1529,7 +1527,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			class ContextInfo
+			sealed class ContextInfo
 			{
 				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel)
 				{

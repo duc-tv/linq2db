@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.DB2
 	using SchemaProvider;
 	using SqlProvider;
 
-	class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
-	class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
+	sealed class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
+	sealed class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
 
 	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{
@@ -196,8 +196,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
@@ -209,8 +208,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,
@@ -224,8 +222,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new DB2BulkCopy(this);
+			_bulkCopy ??= new DB2BulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? DB2Tools.DefaultBulkCopyType : options.BulkCopyType,

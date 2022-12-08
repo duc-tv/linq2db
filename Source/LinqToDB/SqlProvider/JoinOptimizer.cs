@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class JoinOptimizer
+	sealed class JoinOptimizer
 	{
 		Dictionary<SqlSearchCondition,SqlSearchCondition>?                      _additionalFilter;
 		Dictionary<VirtualField,HashSet<Tuple<int,VirtualField>>>?              _equalityMap;
@@ -69,7 +69,7 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
-		private class IsDependedContext
+		private sealed class IsDependedContext
 		{
 			public IsDependedContext(JoinOptimizer optimizer, HashSet<int> testedSources)
 			{
@@ -131,7 +131,7 @@ namespace LinqToDB.SqlProvider
 			return IsDependedExcludeJoins(testedSources);
 		}
 
-		private class IsDependedExcludeJoinsContext
+		private sealed class IsDependedExcludeJoinsContext
 		{
 			public IsDependedExcludeJoinsContext(JoinOptimizer optimizer, HashSet<int> testedSources)
 			{
@@ -181,7 +181,7 @@ namespace LinqToDB.SqlProvider
 			return ctx.Dependent;
 		}
 
-		private class HasDependencyWithParentContext
+		private sealed class HasDependencyWithParentContext
 		{
 			public HasDependencyWithParentContext(SqlJoinedTable child, HashSet<int> sources)
 			{
@@ -222,7 +222,7 @@ namespace LinqToDB.SqlProvider
 			return ctx.Dependent;
 		}
 
-		private class IsDependedOnJoinContext
+		private sealed class IsDependedOnJoinContext
 		{
 			public IsDependedOnJoinContext(JoinOptimizer optimizer, SqlTableSource table, HashSet<int> testedSources, int currentSourceId)
 			{
@@ -363,8 +363,7 @@ namespace LinqToDB.SqlProvider
 
 		void RemoveSource(SqlTableSource fromTable, SqlJoinedTable join)
 		{
-			if (_removedSources == null)
-				_removedSources = new HashSet<int>();
+			_removedSources ??= new HashSet<int>();
 
 			_removedSources.Add(join.Table.SourceID);
 
@@ -401,8 +400,7 @@ namespace LinqToDB.SqlProvider
 
 		void ReplaceField(VirtualField oldField, VirtualField newField)
 		{
-			if (_replaceMap == null)
-				_replaceMap = new Dictionary<VirtualField, VirtualField>();
+			_replaceMap ??= new Dictionary<VirtualField, VirtualField>();
 
 			_replaceMap.Remove(oldField);
 			_replaceMap.Add   (oldField, newField);
@@ -410,8 +408,7 @@ namespace LinqToDB.SqlProvider
 
 		void AddEqualFields(VirtualField field1, VirtualField field2, int levelSourceId)
 		{
-			if (_equalityMap == null)
-				_equalityMap = new Dictionary<VirtualField, HashSet<Tuple<int, VirtualField>>>();
+			_equalityMap ??= new Dictionary<VirtualField, HashSet<Tuple<int, VirtualField>>>();
 
 			if (!_equalityMap.TryGetValue(field1, out var set))
 			{
@@ -569,8 +566,7 @@ namespace LinqToDB.SqlProvider
 
 		void AddSearchConditions(SqlSearchCondition search, IEnumerable<SqlCondition> conditions)
 		{
-			if (_additionalFilter == null)
-				_additionalFilter = new Dictionary<SqlSearchCondition, SqlSearchCondition>();
+			_additionalFilter ??= new Dictionary<SqlSearchCondition, SqlSearchCondition>();
 
 			if (!_additionalFilter.TryGetValue(search, out var value))
 			{
@@ -750,8 +746,7 @@ namespace LinqToDB.SqlProvider
 			{
 				keys = GetKeysInternal(tableSource);
 
-				if (_keysCache == null)
-					_keysCache = new Dictionary<int, List<VirtualField[]>?>();
+				_keysCache ??= new Dictionary<int, List<VirtualField[]>?>();
 
 				_keysCache.Add(tableSource.SourceID, keys);
 			}
@@ -946,14 +941,12 @@ namespace LinqToDB.SqlProvider
 
 				equality.OneCondition = c;
 
-				if (found == null)
-					found = new List<FoundEquality>();
+				found ??= new List<FoundEquality>();
 
 				found.Add(equality);
 			}
 
-			if (_fieldPairCache == null)
-				_fieldPairCache = new Dictionary<Tuple<SqlTableSource?, SqlTableSource>, List<FoundEquality>?>();
+			_fieldPairCache ??= new Dictionary<Tuple<SqlTableSource?, SqlTableSource>, List<FoundEquality>?>();
 
 			_fieldPairCache.Add(key, found);
 
@@ -1001,10 +994,9 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 
 					foreach (var key in keys)
 						uniqueFields.Add(key);
@@ -1095,8 +1087,7 @@ namespace LinqToDB.SqlProvider
 
 					if (f1.ManyField.Name == f2.ManyField.Name && f1.OneField.Name == f2.OneField.Name)
 					{
-						if (found == null)
-							found = new List<FoundEquality>();
+						found ??= new List<FoundEquality>();
 
 						found.Add(f2);
 					}
@@ -1124,10 +1115,9 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 
 					foreach (var key in keys)
 						uniqueFields.Add(key);
@@ -1189,10 +1179,9 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
 						uniqueFields.Add(key);
 				}
@@ -1250,10 +1239,9 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = uniqueKeys[i];
 
-				if (keys.All(k => foundFields.Contains(k)))
+				if (keys.All(foundFields.Contains))
 				{
-					if (uniqueFields == null)
-						uniqueFields = new HashSet<VirtualField>();
+					uniqueFields ??= new HashSet<VirtualField>();
 					foreach (var key in keys)
 						uniqueFields.Add(key);
 				}
@@ -1271,7 +1259,7 @@ namespace LinqToDB.SqlProvider
 
 
 		[DebuggerDisplay("{ManyField.DisplayString()} -> {OneField.DisplayString()}")]
-		class FoundEquality
+		sealed class FoundEquality
 		{
 			public VirtualField ManyField = null!;
 			public SqlCondition OneCondition = null!;
@@ -1280,7 +1268,7 @@ namespace LinqToDB.SqlProvider
 
 		//TODO: investigate do we still needs this class over ISqlExpression
 		[DebuggerDisplay("{DisplayString()}")]
-		class VirtualField
+		sealed class VirtualField
 		{
 			public VirtualField(ISqlExpression expression)
 			{

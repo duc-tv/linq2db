@@ -13,8 +13,8 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
-	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
@@ -46,6 +46,16 @@ namespace LinqToDB.DataProvider.MySql
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
+
+			if (Adapter.GetTimeSpanMethodName != null) SetProviderField(typeof(TimeSpan), Adapter.GetTimeSpanMethodName, Adapter.DataReaderType);
+			if (Adapter.GetSByteMethodName    != null) SetProviderField(typeof(sbyte)   , Adapter.GetSByteMethodName   , Adapter.DataReaderType);
+			if (Adapter.GetUInt16MethodName   != null) SetProviderField(typeof(ushort)  , Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt32MethodName   != null) SetProviderField(typeof(uint)    , Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt64MethodName   != null) SetProviderField(typeof(ulong)   , Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
+#if NET6_0_OR_GREATER
+			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField(typeof(TimeOnly), Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyMethodName != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
+#endif
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()

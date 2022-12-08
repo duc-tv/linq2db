@@ -57,7 +57,7 @@ namespace LinqToDB.Tools.EntityServices
 			Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key);
 		}
 
-		class KeyComparer<TK> : IKeyComparer
+		sealed class KeyComparer<TK> : IKeyComparer
 		{
 			Func<TK,T>?           _mapper;
 			List<MemberAccessor>? _keyColumns;
@@ -148,8 +148,7 @@ namespace LinqToDB.Tools.EntityServices
 
 			if (_keyComparers == null)
 				lock (this)
-					if (_keyComparers == null)
-						_keyComparers = new ConcurrentDictionary<Type,IKeyComparer>();
+					_keyComparers ??= new ConcurrentDictionary<Type,IKeyComparer>();
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),

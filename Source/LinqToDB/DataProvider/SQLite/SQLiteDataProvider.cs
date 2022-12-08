@@ -15,8 +15,8 @@ namespace LinqToDB.DataProvider.SQLite
 	using SchemaProvider;
 	using SqlProvider;
 
-	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
 	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
@@ -39,9 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 

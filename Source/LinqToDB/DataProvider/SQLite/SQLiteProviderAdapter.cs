@@ -131,8 +131,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_systemDataSQLite == null)
 					lock (_systemSyncRoot)
-						if (_systemDataSQLite == null)
-							_systemDataSQLite = CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
 
 				return _systemDataSQLite;
 			}
@@ -140,8 +139,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_microsoftDataSQLite == null)
 					lock (_msSyncRoot)
-						if (_microsoftDataSQLite == null)
-							_microsoftDataSQLite = CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
 
 				return _microsoftDataSQLite;
 			}
@@ -149,13 +147,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region wrappers
 		[Wrapper]
-		private class SqliteConnection
+		private sealed class SqliteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class SQLiteConnection
+		private sealed class SQLiteConnection
 		{
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}

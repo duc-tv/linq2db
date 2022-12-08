@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
-	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
-	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
-	class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
-	class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
-	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
-	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
+	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
+	sealed class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
+	sealed class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
+	sealed class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider.Oracle
 			Provider = provider;
 			Version  = version;
 
-			//SqlProviderFlags.IsCountSubQuerySupported        = false;
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -135,9 +134,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var rawCommand = TryGetProviderCommand(dataConnection, command);
-
-			if (rawCommand != null)
+			if (TryGetProviderCommand(dataConnection, command) is { } rawCommand)
 			{
 				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
@@ -150,17 +147,16 @@ namespace LinqToDB.DataProvider.Oracle
 				// For LONG data type fetching initialization
 				Adapter.SetInitialLONGFetchSize?.Invoke(rawCommand, -1);
 
-				if (parameters != null && Adapter.SetArrayBindCount != null)
-					foreach (var parameter in parameters)
-					{
-						if (parameter.IsArray
-							&& parameter.Value is object[] value
-							&& value.Length != 0)
-						{
-							Adapter.SetArrayBindCount(rawCommand, value.Length);
-							break;
-						}
-					}
+				// Always reset SetArrayBindCount, in case it was modified by a previous command.
+				// When using array bindings, _all_ parameters must be arrays and have the same length.
+				if (Adapter.SetArrayBindCount != null)
+				{
+					int arrayBindCount = parameters?.Length > 0 && parameters[0] is { IsArray: true, Value: object[] value }
+						? value.Length
+						: 0;
+
+					Adapter.SetArrayBindCount(rawCommand, arrayBindCount);
+				}
 			}
 
 			return command;
@@ -340,8 +336,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -353,8 +348,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
@@ -368,8 +362,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (_bulkCopy == null)
-				_bulkCopy = new OracleBulkCopy(this);
+			_bulkCopy ??= new OracleBulkCopy(this);
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,

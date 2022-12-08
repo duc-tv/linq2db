@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -17,7 +18,7 @@ namespace Tests.Mapping
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 			public int ID1 { get; set; }
@@ -27,7 +28,7 @@ namespace Tests.Mapping
 		}
 
 		[Table(IsColumnAttributeRequired = true)]
-		class MyClass2
+		sealed class MyClass2
 		{
 			public int ID { get; set; }
 
@@ -35,7 +36,7 @@ namespace Tests.Mapping
 		}
 
 		[Table]
-		class MyClass3
+		sealed class MyClass3
 		{
 			public int ID { get; set; }
 		}
@@ -78,7 +79,7 @@ namespace Tests.Mapping
 		{
 		}
 
-		class MyInheritedClass2 : MyInheritedClass
+		sealed class MyInheritedClass2 : MyInheritedClass
 		{
 		}
 
@@ -88,7 +89,7 @@ namespace Tests.Mapping
 			public int     IntValue    { get; set; }
 		}
 
-		class MyInheritedClass4 : MyInheritedClass3, IInterface2
+		sealed class MyInheritedClass4 : MyInheritedClass3, IInterface2
 		{
 			public int MarkedOnType { get; set; }
 		}
@@ -101,10 +102,10 @@ namespace Tests.Mapping
 
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
-				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
 				{
-					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLowerInvariant();
 				}
 			};
 
@@ -328,7 +329,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -353,7 +354,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -390,12 +391,12 @@ namespace Tests.Mapping
 			}
 		}
 
-		class DescendantEntity : BaseEntity
+		sealed class DescendantEntity : BaseEntity
 		{
 		}
 
 		[Test]
-		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -545,7 +546,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -587,7 +588,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
@@ -697,6 +698,49 @@ namespace Tests.Mapping
 				else
 					Assert.That(sql2, Does.Not.Contain("[Money]"));
 			}
+		}
+
+		public class SequenceTable
+		{
+			public int Id { get; set; }
+		}
+
+		[Test]
+		public void TestSequenceHelper([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.UseSequence("sequencetestseq");
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
+		}
+
+		[Test]
+		public void TestSequenceAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<SequenceTable>()
+				.Property(p => p.Id)
+				.HasAttribute(new SequenceNameAttribute("sequencetestseq"));
+
+			using var db = GetDataConnection(context, ms);
+			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
+
+			records.RetrieveIdentity(db, true);
+
+			for (var i = 0; i < records.Length; i++)
+				Assert.AreEqual(records[0].Id + i, records[i].Id);
 		}
 	}
 }

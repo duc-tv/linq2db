@@ -111,7 +111,7 @@ namespace Tests.Samples
 
 	public static class Json
 	{
-		class JsonValueBuilder : Sql.IExtensionCallBuilder
+		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -161,9 +161,8 @@ namespace Tests.Samples
 	[TestFixture]
 	public class JsonConvertTests : TestBase
 	{
-
 		[Test]
-		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = new MyDataConnection(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

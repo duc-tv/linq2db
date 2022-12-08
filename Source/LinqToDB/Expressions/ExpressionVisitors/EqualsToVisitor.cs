@@ -64,7 +64,7 @@ namespace LinqToDB.Expressions
 			return new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
 		}
 
-		internal class EqualsToInfo
+		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
 				IDataContext                                              dataContext,
@@ -446,8 +446,7 @@ namespace LinqToDB.Expressions
 						var attr = parameters[i].GetCustomAttribute<SqlQueryDependentAttribute>(false);
 						if (attr != null)
 						{
-							if (attributes == null)
-								attributes = new SqlQueryDependentAttribute[parameters.Length];
+							attributes ??= new SqlQueryDependentAttribute[parameters.Length];
 							attributes[i] = attr;
 						}
 					}

@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

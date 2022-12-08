@@ -13,12 +13,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
-		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
-		class TableWithData
+		sealed class TableWithData
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table(Schema = "TestSchema")]
-		class TableWithDataAndSchema
+		sealed class TableWithDataAndSchema
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class DestinationTable
+		sealed class DestinationTable
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
