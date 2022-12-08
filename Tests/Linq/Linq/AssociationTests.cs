@@ -908,11 +908,11 @@ namespace Tests.Linq
 		{
 			[Column]
 			public int ID { get; set; }
+
 			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
 			public NotNullChild Child { get; set; } = null!;
 
-			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate 
-				=> (p, c) => p.ID == c.ParentID;
+			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate => (p, c) => p.ID == c.ParentID;
 		}
 
 		[Table("NotNullChild")]
@@ -925,7 +925,7 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationExpressionNotNull([DataSources] string context)
 		{
-			var parentData = new[] 
+			var parentData = new[]
 			{
 				new NotNullParent { ID = 1 },
 				new NotNullParent { ID = 2 },
@@ -936,13 +936,13 @@ namespace Tests.Linq
 				new NotNullChild { ParentID = 1 },
 			};
 
-			using (var db = GetDataContext(context))
-			using (var parent = db.CreateLocalTable("NotNullParent", parentData))
-			using (var child = db.CreateLocalTable("NotNullChild", childData))
-			{				
-				var query = parent.Select(p => p.Child.ParentID);	// Should be an INNER JOIN because CanBeNull = false
-				Assert.AreEqual(1, query.Count());
-			}
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable("NotNullParent", parentData);
+			using var child  = db.CreateLocalTable("NotNullChild", childData);
+
+			var query = parent.Select(p => p.Child.ParentID); // Should be an INNER JOIN because CanBeNull = false
+
+			Assert.AreEqual(1, query.Count());
 		}
 
 		[Test]
