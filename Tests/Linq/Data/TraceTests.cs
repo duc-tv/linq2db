@@ -61,6 +61,7 @@ namespace Tests.Data
 			return steps.ToDictionary(s => s.Enum, s => s.Value);
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/70", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
 		{
@@ -89,6 +90,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/70", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
 		{
